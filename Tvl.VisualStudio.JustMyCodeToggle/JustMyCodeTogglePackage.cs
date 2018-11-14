@@ -19,15 +19,20 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.BackgroundLoad)]
     internal class JustMyCodeTogglePackage : AsyncPackage
     {
-        private readonly OleMenuCommand _command;
+        private readonly OleMenuCommand _justMyCodeCommand;
+        private readonly OleMenuCommand _diagnosticBuildLogCommand;
 
         public JustMyCodeTogglePackage()
         {
-            var id = new CommandID(JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet, JustMyCodeToggleConstants.CmdidJustMyCodeToggle);
-            EventHandler invokeHandler = HandleInvokeJustMyCodeToggle;
-            EventHandler changeHandler = HandleChangeJustMyCodeToggle;
-            EventHandler beforeQueryStatus = HandleBeforeQueryStatusJustMyCodeToggle;
-            _command = new OleMenuCommand(invokeHandler, changeHandler, beforeQueryStatus, id);
+            var justMyCodeCommandId = new CommandID(JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet, JustMyCodeToggleConstants.CmdidJustMyCodeToggle);
+            _justMyCodeCommand = SetupCommand(justMyCodeCommandId, "Debugging", "General", "EnableJustMyCode",
+                value => value is bool b && !b,
+                value => value is bool b && b);
+
+            var diagnosticBuildLogCommandId = new CommandID(JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet, JustMyCodeToggleConstants.CmdidDiagnosticBuildLogToggle);
+            _diagnosticBuildLogCommand = SetupCommand(diagnosticBuildLogCommandId, "Environment", "ProjectsAndSolution", "MSBuildOutputVerbosity",
+                value => value is int i && i == 4 ? 1 : 4,
+                value => value is int i && i == 4);
         }
 
         public EnvDTE.DTE ApplicationObject
@@ -46,47 +51,42 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
 
             var mcs = (IMenuCommandService)await GetServiceAsync(typeof(IMenuCommandService));
             Assumes.Present(mcs);
-            mcs.AddCommand(_command);
+            mcs.AddCommand(_justMyCodeCommand);
+            mcs.AddCommand(_diagnosticBuildLogCommand);
         }
 
-        private void HandleInvokeJustMyCodeToggle(object sender, EventArgs e)
+        private OleMenuCommand SetupCommand(CommandID id, string category, string page, string item, Func<object, object> toggleValue, Func<object, bool> isChecked)
         {
-            try
+            EventHandler invokeHandler = (sender, e) =>
             {
-                EnvDTE.Property enableJustMyCode = ApplicationObject.get_Properties("Debugging", "General").Item("EnableJustMyCode");
-                if (enableJustMyCode.Value is bool value)
+                try
                 {
-                    enableJustMyCode.Value = !value;
+                    EnvDTE.Property property = ApplicationObject.get_Properties(category, page).Item(item);
+                    property.Value = toggleValue(property.Value);
                 }
-            }
-            catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
-            {
-            }
-        }
-
-        private void HandleChangeJustMyCodeToggle(object sender, EventArgs e)
-        {
-        }
-
-        private void HandleBeforeQueryStatusJustMyCodeToggle(object sender, EventArgs e)
-        {
-            try
-            {
-                _command.Supported = true;
-
-                EnvDTE.Property enableJustMyCode = ApplicationObject.get_Properties("Debugging", "General").Item("EnableJustMyCode");
-                if (enableJustMyCode.Value is bool value)
+                catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
                 {
-                    _command.Checked = value;
                 }
-
-                _command.Enabled = true;
-            }
-            catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
+            };
+            EventHandler changeHandler = (sender, e) => { };
+            EventHandler beforeQueryStatus = (sender, e) =>
             {
-                _command.Supported = false;
-                _command.Enabled = false;
-            }
+                var command = sender as OleMenuCommand;
+                try
+                {
+                    command.Supported = true;
+
+                    EnvDTE.Property property = ApplicationObject.get_Properties(category, page).Item(item);
+                    command.Checked = isChecked(property.Value);
+                    command.Enabled = true;
+                }
+                catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
+                {
+                    command.Supported = false;
+                    command.Enabled = false;
+                }
+            };
+            return new OleMenuCommand(invokeHandler, changeHandler, beforeQueryStatus, id);
         }
     }
 }

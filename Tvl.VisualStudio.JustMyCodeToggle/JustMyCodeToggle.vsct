@@ -19,6 +19,18 @@
           <LocCanonicalName>Debug.JustMyCodeToggle</LocCanonicalName>
         </Strings>
       </Button>
+      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidDiagnosticBuildLogToggle" priority="0x0000" type="Button">
+        <Icon guid="ImageCatalogGuid" id="JustMyCode" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Diagnostic Build Log</ButtonText>
+          <ToolTipText>Toggle the Diagnostic Build Log option</ToolTipText>
+          <CommandName>Build.DiagnosticBuildLogToggle</CommandName>
+          <CanonicalName>Build.DiagnosticBuildLogToggle</CanonicalName>
+          <LocCanonicalName>Build.DiagnosticBuildLogToggle</LocCanonicalName>
+        </Strings>
+      </Button>
     </Buttons>
   </Commands>
 
@@ -27,7 +39,11 @@
     <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x03E0">
       <Parent guid="guidVSDebugGroup" id="IDG_CALLSTACK_OPTIONS"/>
     </CommandPlacement>
-
+    <!-- In the standard context menu -->
+    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidDiagnosticBuildLogToggle" priority="0x0500">
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_TOOLSB_RUNBUILD"/>
+    </CommandPlacement>
+    
     <!-- In the Debug toolbar, after "Show Threads in Source" -->
     <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0320">
       <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_TOOLBAR_WATCH"/>
@@ -39,6 +55,7 @@
 
     <GuidSymbol name="guidJustMyCodeTogglePackageCmdSet" value="{B1317E30-CFDA-47CA-90A0-95E894B150A0}">
       <IDSymbol name="cmdidJustMyCodeToggle" value="0x0100" />
+      <IDSymbol name="cmdidDiagnosticBuildLogToggle" value="0x0200" />
     </GuidSymbol>
   </Symbols>
 </CommandTable>

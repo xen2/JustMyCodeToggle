@@ -13,5 +13,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         public static readonly Guid GuidJustMyCodeToggleCommandSet = new Guid("{" + GuidJustMyCodeToggleCommandSetString + "}");
 
         public static readonly int CmdidJustMyCodeToggle = 0x0100;
+
+        public static readonly int CmdidDiagnosticBuildLogToggle = 0x0200;
     }
 }
